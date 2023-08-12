@@ -2,4 +2,4 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/ApolloCipherMSTests/obj/Debug/net6.0/ApolloCipherMSTests.csproj.AssemblyReference.cache
+/ApolloCipherMSTests/obj/*

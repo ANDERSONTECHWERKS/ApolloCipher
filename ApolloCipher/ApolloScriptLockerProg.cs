@@ -3,8 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-// Blog used to develop this script:
-//https://ianvink.wordpress.com/2022/12/03/a-straightforward-way-in-c-net-to-encrypt-and-decrypt-a-string-using-aes/
+
 namespace ApolloCipher
 {
     public class ApollosScriptLockerProg
