@@ -1,5 +1,7 @@
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using ApolloCipher;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace ScriptLockerMSTests
 {
@@ -7,29 +9,34 @@ namespace ScriptLockerMSTests
     [TestClass]
     public class EncryptDecryptTests
     {
-        string TestScript = "What the fuck did you just fucking say about me, you little bitch? I'll have you know I graduated top of my class in the Navy Seals, and I've been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills." +
-            " I am trained in gorilla warfare and I'm the top sniper in the entire US armed forces. You are nothing to me but just another target." +
-            " I will wipe you the fuck out with precision the likes of which has never been seen before on this Earth, mark my fucking words." +
-            " You think you can get away with saying that shit to me over the Internet? Think again, fucker." +
-            " As we speak I am contacting my secret network of spies across the USA and your IP is being traced right now so you better prepare for the storm, maggot." +
-            " The storm that wipes out the pathetic little thing you call your life. You're fucking dead, kid. I can be anywhere, anytime, and I can kill you in over seven hundred ways, and that's just with my bare hands." +
-            " Not only am I extensively trained in unarmed combat, but I have access to the entire arsenal of the United States Marine Corps and I will use it to its full extent to wipe your miserable ass off the face of the continent, you little shit." +
-            " If only you could have known what unholy retribution your little \"clever\" comment was about to bring down upon you, maybe you would have held your fucking tongue. But you couldn't, you didn't, and now you're paying the price, you goddamn idiot." +
-            " I will shit fury all over you and you will drown in it. You're fucking dead, kiddo.";
+        string LitanyAgainstFear = "" +
+            "I must not fear.\r\n" +
+            "Fear is the mind-killer.\r\n" +
+            "Fear is the little-death that brings total obliteration.\r\n" +
+            "I will face my fear.\r\n" +
+            "I will permit it to pass over me and through me.\r\n" +
+            "And when it has gone past, I will turn the inner eye to see its path.\r\n" +
+        "Where the fear has gone there will be nothing. Only I will remain.";
+
+        string DefendTheArticles = "I swore an oath.To defend the articles." +
+            "The articles say there is an election in seven months." +
+            " Now, if you are telling me we are throwing out the law," +
+            " then I am not a captain, you are not a commander," +
+            " and you are not the president." +
+            " And I don't owe either of you a damned explanation for anything.";
 
         string Plaintext;
         string Ciphertext;
         string Password = "Testicles";
         string Password2 = "Butthole";
-
         ApollosScriptLockerProg PicProg;
         ApollosScriptLockerProg PicProg2;
 
         [TestMethod]
         public void TestEncryptDecrypt()
         {
-            Console.WriteLine("TestEncryptDecrypt starting with the following script:\n" + TestScript);
-            PicProg = new ApollosScriptLockerProg(TestScript, false,Password);
+            Console.WriteLine("TestEncryptDecrypt starting with the following script:\n" + LitanyAgainstFear);
+            PicProg = new ApollosScriptLockerProg(LitanyAgainstFear, false,Password);
             
             // First, check that it's not null.
             Assert.IsNotNull(PicProg);
@@ -48,14 +55,14 @@ namespace ScriptLockerMSTests
             Plaintext = PicProg.DecryptLoadedScript();
             Debug.WriteLine($"Prog1 Decrypted ciphertext, returning Plaintext:\n {Plaintext}");
 
-            Assert.IsTrue(Plaintext.Equals(TestScript));
+            Assert.IsTrue(Plaintext.Equals(LitanyAgainstFear));
         }
 
         [TestMethod]
         public void TestEncryptDecryptx2()
         {
-            Console.WriteLine("TestEncryptDecrypt starting with the following script:\n" + TestScript);
-            PicProg = new ApollosScriptLockerProg(TestScript, false, Password);
+            Console.WriteLine("TestEncryptDecrypt starting with the following script:\n" + LitanyAgainstFear);
+            PicProg = new ApollosScriptLockerProg(LitanyAgainstFear, false, Password);
 
             // Make the two encryptor/decryptors feed each other ciphertext and return it to normal.
 
@@ -102,13 +109,13 @@ namespace ScriptLockerMSTests
 
             Debug.WriteLine($"Decrypted ciphertext1, returning Plaintext:\n{Plaintext}");
 
-            Assert.IsTrue(Plaintext.Equals(TestScript));
+            Assert.IsTrue(Plaintext.Equals(LitanyAgainstFear));
         }
 
         [TestMethod]
         public void TestFileOperations()
         {
-            Console.WriteLine("TestEncryptDecrypt starting with the following script:\n" + TestScript);
+            Console.WriteLine("TestEncryptDecrypt starting with the following script:\n" + LitanyAgainstFear);
             PicProg = new ApollosScriptLockerProg(false, "testPassword", "isyBastion.txt");
 
             // First, check that it's not null.
@@ -128,7 +135,7 @@ namespace ScriptLockerMSTests
             Plaintext = PicProg.DecryptLoadedScript();
             Debug.WriteLine($"Prog1 Decrypted ciphertext, returning Plaintext:\n {Plaintext}");
 
-            Assert.IsTrue(Plaintext.Equals(TestScript));
+            Assert.IsTrue(Plaintext.Equals(LitanyAgainstFear));
         }
 
     }

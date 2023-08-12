@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="aes.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="isybastion.txt" />
     <None Remove="LICENSE.txt" />
   </ItemGroup>
