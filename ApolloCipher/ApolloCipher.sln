@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33723.286
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApolloCipher", "ApolloCipher.csproj", "{40F66F80-BEE1-46B4-8842-1E5E0156D10A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApolloCipherMSTests", "..\ApolloCipherMSTests\ApolloCipherMSTests.csproj", "{A0051116-42E2-4839-9864-E6CC8422CE7D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{40F66F80-BEE1-46B4-8842-1E5E0156D10A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40F66F80-BEE1-46B4-8842-1E5E0156D10A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40F66F80-BEE1-46B4-8842-1E5E0156D10A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40F66F80-BEE1-46B4-8842-1E5E0156D10A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0051116-42E2-4839-9864-E6CC8422CE7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0051116-42E2-4839-9864-E6CC8422CE7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0051116-42E2-4839-9864-E6CC8422CE7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0051116-42E2-4839-9864-E6CC8422CE7D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {99DBB260-1F8C-4099-B714-C1DD57236E4C}
+	EndGlobalSection
+EndGlobal
