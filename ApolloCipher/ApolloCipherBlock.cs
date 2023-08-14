@@ -74,7 +74,8 @@ namespace ApolloCipher
 
             this.PlainTextByteArr = Encoding.UTF8.GetBytes(plaintext);
             this.PasswordByteArr = Encoding.UTF8.GetBytes(password);
-
+            
+            
             // Get our secrets from the chain
             this.SecretByte1 = SecretByte1;
             this.SecretByte2 = SecretByte2;

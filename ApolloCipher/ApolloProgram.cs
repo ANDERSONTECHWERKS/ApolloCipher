@@ -36,6 +36,11 @@ namespace ApolloCipher
 
         public static void Main()
         {
+
+            ConsoleColor fgColor = Console.ForegroundColor;
+            ConsoleColor bgColor = Console.BackgroundColor;
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.BackgroundColor = ConsoleColor.Black;
             Console.InputEncoding = Encoding.UTF8;
 
             string script = "";
@@ -49,11 +54,12 @@ namespace ApolloCipher
 
             byte[] ciphertextBytes = null;
 
-            bool debug = true;
+            bool debug = false;
 
             ApolloCipher.ApolloCipherBlockChain pChain;
+            
 
-            Console.WriteLine("Please enter what you want to encrypt and press return on an empty string when you have pasted everything:");
+            Console.WriteLine("Please enter the text you want to encrypt and press 'ENTER' on an empty string once you have pasted everything:");
 
             userInput = Console.ReadLine();
 
@@ -86,8 +92,10 @@ namespace ApolloCipher
                 Console.WriteLine($"Ciphertext is:\n{ciphertext}");
                 Console.WriteLine($"Reminder - You previously had set the password to:\n{password}");
                 Console.WriteLine("<-- DECRYPTION -->");
+            } else
+            {
+                Console.WriteLine(ciphertext);
             }
-
 
             plaintext = pChain.DecryptChain();
 
@@ -97,6 +105,8 @@ namespace ApolloCipher
                 Console.WriteLine(plaintext);
             }
 
+            Console.WriteLine("Hope you enjoyed the demo! Press ENTER to quit.");
+            Console.ReadLine();
 
         }
 
@@ -219,9 +229,25 @@ namespace ApolloCipher
         {
             this.Script = "";
 
-            StreamReader reader = new StreamReader(filename);
+            StreamReader reader;
 
             string line;
+
+            try
+            {
+                if (File.Exists(filename))
+                {
+                    reader = new StreamReader(filename);
+                } else
+                {
+                    throw new FileNotFoundException(filename);
+                }
+            } catch (Exception e)
+            {
+                // Silently fail and return until we decide on output
+                return;
+            }
+
 
             while ((line = reader.ReadLine()) != null)
             {

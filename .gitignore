@@ -3,4 +3,5 @@
 ################################################################################
 
 /ApolloCipherMSTests/obj/*
-/ApolloCipherMSTests/bin/Release/net6.0/CoverletSourceRootsMapping
+/ApolloCipherMSTests/bin/*
+/ApolloCipherMSTests/bin/TestResults/*

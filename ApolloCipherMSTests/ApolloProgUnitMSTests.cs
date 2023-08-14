@@ -18,12 +18,7 @@ namespace ScriptLockerMSTests
             "And when it has gone past, I will turn the inner eye to see its path.\r\n" +
         "Where the fear has gone there will be nothing. Only I will remain.";
 
-        string DefendTheArticles = "I swore an oath.To defend the articles." +
-            "The articles say there is an election in seven months." +
-            " Now, if you are telling me we are throwing out the law," +
-            " then I am not a captain, you are not a commander," +
-            " and you are not the president." +
-            " And I don't owe either of you a damned explanation for anything.";
+        string DefendTheArticles = "Apollo: I swore an oath. To defend the articles. The articles say there is an election in seven months. Now, if you are telling me we are throwing out the law, then I am not a captain, you are not a commander, and you are not the president. And I don't owe either of you a damned explanation for anything.";
 
         string Plaintext;
         string Ciphertext;
@@ -116,7 +111,7 @@ namespace ScriptLockerMSTests
         public void TestFileOperations()
         {
             Console.WriteLine("TestEncryptDecrypt starting with the following script:\n" + LitanyAgainstFear);
-            PicProg = new ApollosScriptLockerProg(false, "testPassword", "isyBastion.txt");
+            PicProg = new ApollosScriptLockerProg(false, "testPassword", "DefendTheArticles.txt");
 
             // First, check that it's not null.
             Assert.IsNotNull(PicProg);
@@ -135,7 +130,7 @@ namespace ScriptLockerMSTests
             Plaintext = PicProg.DecryptLoadedScript();
             Debug.WriteLine($"Prog1 Decrypted ciphertext, returning Plaintext:\n {Plaintext}");
 
-            Assert.IsTrue(Plaintext.Equals(LitanyAgainstFear));
+            Assert.IsTrue(Plaintext.Equals(DefendTheArticles.Trim()));
         }
 
     }
