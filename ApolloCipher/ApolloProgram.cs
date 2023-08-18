@@ -6,32 +6,44 @@ using System.Text;
 
 namespace ApolloCipher
 {
-    public class ApollosScriptLockerProg
+    public class ApolloProgram
     {
-        // Static stuff for the program itself
-        string Script;
+        // Static stuff
+        string Data = "";
         string Password;
 
-        bool ScriptEncrypted = false;
+        bool DataEncrypted = false;
 
         ApolloCipherBlockChain CipherChain;
 
+        byte[] LoadedFileBytes;
         byte Secret1 = 69;
         byte Secret2 = 66;
         byte TerminationByte = 42;
 
-        public ApollosScriptLockerProg(string script, bool ciphertextScript, string password)
+        //TODO: XORGen experiments.
+        public static void XORGen()
         {
-            this.CipherChain = new ApolloCipherBlockChain(script,password,Secret1,Secret2, ciphertextScript);
-            this.Script = script;
-            this.ScriptEncrypted = ciphertextScript;
-            this.Password = password;
+            byte x1;
+            byte x2;
+            byte x3;
+
+            //now XOR them. with sauce.
         }
 
-        public ApollosScriptLockerProg(bool ciphertextScript, string password, string filename)
+        public ApolloProgram(string data, bool ciphertextData, string password)
         {
-            this.LoadScriptFromFile(filename, ciphertextScript);
-            this.CipherChain = new ApolloCipherBlockChain(this.Script, password, this.Secret1, this.Secret2, ciphertextScript);
+            this.Password = password;
+            this.DataEncrypted = ciphertextData;
+            this.Data = data;
+            this.CipherChain = new ApolloCipherBlockChain(data, password, Secret1, Secret2, ciphertextData);
+        }
+
+        public ApolloProgram(bool ciphertextData, string password, string filename)
+        {
+            this.Password = password;
+            this.DataEncrypted = ciphertextData;
+            this.LoadDataFromFile(filename, ciphertextData);
         }
 
         public static void Main()
@@ -47,23 +59,23 @@ namespace ApolloCipher
             string password = "";
             string ciphertext = "";
             string plaintext = "";
-            string? userInput = "";
+            string userInput = "";
 
             byte Secret1 = 66;
             byte Secret2 = 69;
 
             byte[] ciphertextBytes = null;
 
-            bool debug = false;
+            bool debug = true;
 
             ApolloCipher.ApolloCipherBlockChain pChain;
-            
 
-            Console.WriteLine("Please enter the text you want to encrypt and press 'ENTER' on an empty string once you have pasted everything:");
+
+            Console.WriteLine("Please enter the text you want to encrypt and type 'ENDINPUT' on a new line once you have pasted everything:");
 
             userInput = Console.ReadLine();
 
-            while (userInput != null && !userInput.Equals(""))
+            while (userInput != null && !userInput.Equals("ENDINPUT"))
             {
                 if (userInput.Equals(""))
                 {
@@ -92,7 +104,8 @@ namespace ApolloCipher
                 Console.WriteLine($"Ciphertext is:\n{ciphertext}");
                 Console.WriteLine($"Reminder - You previously had set the password to:\n{password}");
                 Console.WriteLine("<-- DECRYPTION -->");
-            } else
+            }
+            else
             {
                 Console.WriteLine(ciphertext);
             }
@@ -131,10 +144,10 @@ namespace ApolloCipher
 
             return buffer;
         }
-
-        public static string EncryptScript(string script, string password, byte Secret1, byte Secret2)
+#region WIP
+        public static string EncryptData(string script, string password, byte Secret1, byte Secret2)
         {
-            ApolloCipherBlockChain? pChain = null;
+            ApolloCipherBlockChain pChain = null;
             string IterSubstring = "";
 
             for (int i = 0; i < script.Length; i += 16)
@@ -144,8 +157,8 @@ namespace ApolloCipher
                 if (pChain == null)
                 {
                     IterSubstring = script.Substring(i, 16);
-                    ApolloCipherBlock pCipherHead = new ApolloCipherBlock(IterSubstring, password, Secret1, Secret2);
-                    pChain = new ApolloCipherBlockChain(pCipherHead);
+                    ApolloCipherBlock pCipherHead = new ApolloCipherBlock(IterSubstring, password, Secret1, Secret2, false);
+                    pChain = new ApolloCipherBlockChain(pCipherHead, password, false, Secret1, Secret2);
                     continue;
                 }
                 else
@@ -154,14 +167,15 @@ namespace ApolloCipher
                     try
                     {
                         IterSubstring = script.Substring(i, 16);
-                    } catch(ArgumentOutOfRangeException aore)
+                    }
+                    catch (ArgumentOutOfRangeException aore)
                     {
-                        IterSubstring = script.Substring(i, (script.Length-1) - i);
+                        IterSubstring = script.Substring(i, (script.Length - 1) - i);
                     }
 
 
 
-                    ApolloCipherBlock pCipherHead = new ApolloCipherBlock(IterSubstring, password, Secret1, Secret2);
+                    ApolloCipherBlock pCipherHead = new ApolloCipherBlock(IterSubstring, password, Secret1, Secret2, false);
                     pChain.AddBlockToTail(pChain, pCipherHead);
                 }
             }
@@ -169,24 +183,24 @@ namespace ApolloCipher
 
         }
 
-        public static string DecryptScript(string encrypted, string password, byte Secret1, byte Secret2)
+        public static string DecryptData(string encrypted, string password, byte Secret1, byte Secret2)
         {
-            ApolloCipherBlockChain? pChain = null;
-
+            ApolloCipherBlockChain pChain = null;
+            
             for (int i = 0; i < encrypted.Length; i += 16)
             {
 
                 // Check for initialized pChain
                 if (pChain == null)
                 {
-                    ApolloCipherBlock pCipherHead = new ApolloCipherBlock(encrypted.Substring(i, 16), password, Secret1, Secret2);
+                    ApolloCipherBlock pCipherHead = new ApolloCipherBlock(encrypted.Substring(i, 16), password, Secret1, Secret2, false);
                     pCipherHead.SetCipherTextManual(encrypted.Substring(i, 16));
-                    pChain = new ApolloCipherBlockChain(pCipherHead);
+                    pChain = new ApolloCipherBlockChain(pCipherHead, password, true, Secret1, Secret2);
                     continue;
                 }
                 else
                 {
-                    ApolloCipherBlock pCipherHead = new ApolloCipherBlock(encrypted.Substring(i, 16), password, Secret1, Secret2);
+                    ApolloCipherBlock pCipherHead = new ApolloCipherBlock(encrypted.Substring(i, 16), password, Secret1, Secret2, false);
                     pCipherHead.SetCipherTextManual(encrypted.Substring(i, 16));
                     pChain.AddBlockToTail(pChain, pCipherHead);
                 }
@@ -194,74 +208,153 @@ namespace ApolloCipher
 
             return pChain.DecryptChain();
         }
-
-        public string EncryptLoadedScript()
+#endregion
+        public string EncryptLoadedData()
         {
-            if(this.ScriptEncrypted == false)
+            if (this.DataEncrypted == false)
             {
-                this.ScriptEncrypted = true;
-                return CipherChain.EncryptChain();
-            } else
+                this.DataEncrypted = true;
+                this.Data = CipherChain.EncryptChain();
+                return this.Data;
+            }
+            else
             {
                 // we always encrypt, regardless of whether or not already encrypted
                 // TODO: Maybe this would be a good place to check if we are trying to encrypt something with our own key?
-                this.ScriptEncrypted = true;
+                this.DataEncrypted = true;
+                this.Data = CipherChain.EncryptChain();
                 return CipherChain.EncryptChain();
             }
 
         }
 
-        public string DecryptLoadedScript()
+        public string DecryptLoadedData()
         {
-            if (this.ScriptEncrypted == true)
+            if (this.DataEncrypted == true)
             {
                 // If the script is encrypted - decrypt.
-                this.ScriptEncrypted = false;
-                return CipherChain.DecryptChain();
-            } else
+                this.Data = CipherChain.DecryptChain();
+                this.DataEncrypted = false;
+                return this.Data;
+            }
+            else
             {
                 // If the script is already decrypted - just return plaintext.
-                return CipherChain.DecryptChain();
+                return this.CipherChain.GetChainPlainText();
             }
         }
 
-        public void LoadScriptFromFile(string filename, bool ScriptEncrypted)
+        public void LoadDataFromFile(string filename, bool DataEncrypted)
         {
-            this.Script = "";
+            byte[] FileByteArr;
+            byte[] TempByteArr = new byte[32];
+            byte TMPByte;
+            int FileByteLen = 0;
+            this.Data = "";
 
             StreamReader reader;
 
-            string line;
+            ApolloCipherBlock NewBlock;
+
+            this.CipherChain = new ApolloCipherBlockChain(DataEncrypted, Password, Secret1, Secret2);
 
             try
             {
                 if (File.Exists(filename))
                 {
-                    reader = new StreamReader(filename);
-                } else
+                    reader = new StreamReader(filename, Encoding.UTF8);
+                    FileByteArr = new byte[File.ReadAllBytes(filename).Length];
+                    FileByteArr = File.ReadAllBytes(filename);
+                    this.LoadedFileBytes = FileByteArr;
+                }
+                else
                 {
                     throw new FileNotFoundException(filename);
                 }
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 // Silently fail and return until we decide on output
-                return;
+                throw e;
             }
 
+            FileByteLen = FileByteArr.Length;
 
-            while ((line = reader.ReadLine()) != null)
+            // Let's load the file byte by byte
+            for (int i = 0; i < FileByteLen; i += 32)
             {
-                this.Script += line;
+                // This if-else determines the behavior for whether or not we are at the end of the string.
+                // Oddly enough - behavior for the end of the string is the 'if' part. I don't typically do it this way.
+                if (i + 32 >= FileByteLen)
+                {
+                    TempByteArr = new byte[32];
+
+                    Buffer.BlockCopy(FileByteArr, i, TempByteArr, 0, FileByteLen - i);
+
+                    NewBlock = new ApolloCipherBlock(TempByteArr, this.Password, this.Secret1, this.Secret2, this.DataEncrypted);
+
+                    this.CipherChain.AddBlockToTail(this.CipherChain, NewBlock);
+
+                    if (DataEncrypted)
+                    {
+                        this.Data += NewBlock.GetCipherTextString();
+                    }
+                    else
+                    {
+                        this.Data += NewBlock.GetPlainTextString();
+                    }
+
+                    // If we are loading unencrypted data - add a terminating block.
+                    // We only want to add terminating blocks when we think we are going to encrypt - we don't add terminating blocks 
+                    // and then decrypt. That's just confusion.
+                    if (!DataEncrypted)
+                    {
+                        // Attach terminating block to chain (haha it's a linkedlist but y'know: "cHaIn").
+                        ApolloCipherBlock TermBlock = ApolloCipherBlock.GenerateTerminatingBlock(this.Data.Length, this.Password, Secret1, Secret2, this.DataEncrypted);
+                        this.CipherChain.AddBlockToTail(this.CipherChain, TermBlock);
+                    }
+                }
+                else
+                {
+                    TempByteArr = new byte[32];
+
+                    Buffer.BlockCopy(FileByteArr, i, TempByteArr, 0, 32);
+
+                    NewBlock = new ApolloCipherBlock(TempByteArr, this.Password, this.Secret1, this.Secret2, this.DataEncrypted);
+
+                    this.CipherChain.AddBlockToTail(this.CipherChain, NewBlock);
+
+
+                    if (DataEncrypted)
+                    {
+                        this.Data += NewBlock.GetCipherTextString();
+                    }
+                    else
+                    {
+                        this.Data += NewBlock.GetPlainTextString();
+                    }
+                }
             }
+
         }
 
-        public void SaveScriptToFile(string filename)
+        public void SaveCipherTextToFile(string filename)
         {
-            StreamWriter writer = new StreamWriter(filename);
-            writer.Write(this.Script);
+            StreamWriter writer = new StreamWriter(filename, false, Encoding.UTF8);
+            writer.Write(this.CipherChain.GetChainCipherText());
+            writer.Flush();
+            writer.Close();
         }
 
-        public string GetCurrentCiphertext ()
+        public void SavePlainTextToFile(string filename)
+        {
+            StreamWriter writer = new StreamWriter(filename, false, Encoding.UTF8);
+            writer.Write(this.CipherChain.GetChainPlainText());
+            writer.Flush();
+            writer.Close();
+        }
+
+        public string GetCurrentCiphertext()
         {
             return this.CipherChain.GetChainCipherText();
         }
