@@ -6,8 +6,4 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="isybastion.txt" />
-  </ItemGroup>
-
 </Project>
