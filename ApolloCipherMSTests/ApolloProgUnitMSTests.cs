@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ApolloCipher;
 
-namespace DataLockerMSTests
+namespace ApolloCipher
 {
 
     [TestClass]
@@ -47,12 +47,44 @@ namespace DataLockerMSTests
             Debug.WriteLine(PicProg.GetCurrentCiphertext());
 
             Ciphertext = PicProg.EncryptLoadedData();
-            Debug.WriteLine($"Prog1 Encrypted plaintext, returning Ciphertext:\n {Ciphertext}");
+            Debug.WriteLine($"Prog1 Encrypted plaintext, returning Ciphertext:\n{Ciphertext}");
 
             Plaintext = PicProg.DecryptLoadedData();
-            Debug.WriteLine($"Prog1 Decrypted ciphertext, returning Plaintext:\n {Plaintext}");
+            Debug.WriteLine($"Prog1 Decrypted ciphertext, returning Plaintext:\n{Plaintext}");
 
             Assert.IsTrue(Plaintext.Equals(LitanyAgainstFear));
+        }
+
+        [TestMethod]
+        public void DeterminismTest()
+        {
+            string pt1;
+            string pt2;
+            string ct1;
+            string ct2;
+
+            string password = "TeStPaSsW0rD!!2345@*()";
+            string data = "<--HUSKER-->";
+
+            ApolloProgram prog1 = new ApolloProgram(data,false, password);
+            ApolloProgram prog2 = new ApolloProgram(data,false, password);
+
+            pt1 = prog1.GetCurrentPlaintext();
+            pt2 = prog2.GetCurrentPlaintext();
+
+            prog1.EncryptLoadedData();
+            prog2.EncryptLoadedData();
+
+            ct1 = prog1.GetCurrentCiphertext();
+            ct2 = prog2.GetCurrentCiphertext();
+
+            Debug.WriteLine($"<--pt1-->\n{pt1}\n<--/pt1-->");
+            Debug.WriteLine($"<--pt2-->\n{pt2}\n<--/pt2-->");
+            Debug.WriteLine($"<--ct1-->\n{ct1}\n<--/ct1-->");
+            Debug.WriteLine($"<--ct2-->\n{ct2}\n<--/ct2-->");
+            Debug.WriteLine($"<--pt1 == pt2-->\n{pt1 == pt2}\n<--/pt1 == pt2-->");
+            Debug.WriteLine($"<--ct1 == ct2-->\n{ct1 == ct2}\n<--/ct1 == ct2-->");
+
         }
 
         [TestMethod]
@@ -80,7 +112,7 @@ namespace DataLockerMSTests
             Debug.WriteLine(CipherText);
 
             Debug.WriteLine($"Creating Prog2 with ciphertext=true input...\n");
-            PicProg2 = new ApolloProgram(Ciphertext, true, Password2);
+            PicProg2 = new ApolloProgram(CipherText, true, Password2);
 
             Debug.WriteLine($"Prog2 ciphertext is:\n");
             Debug.WriteLine(PicProg2.GetCurrentCiphertext());
@@ -95,7 +127,29 @@ namespace DataLockerMSTests
         }
 
         [TestMethod]
-        public void TestFileOperations()
+        public void TestSmall()
+        {
+            string pt1;
+            string pt2;
+            string ct1;
+            string ct2;
+
+            string password = "TeSt";
+            string data = "HUSK";
+
+            ApolloProgram prog1 = new ApolloProgram(data, false, password);
+            ApolloProgram prog2 = new ApolloProgram(prog1.EncryptLoadedData(), true, password);
+
+            pt2 = prog2.DecryptLoadedData();
+
+            Debug.WriteLine(pt2);
+
+            Assert.IsTrue(pt2.Equals(data));
+            
+        }
+
+        [TestMethod]
+        public void TestInternalShiftingOps()
         {
             PicProg = new ApolloProgram(false, "testPassword", "DefendTheArticles.txt");
 
@@ -108,12 +162,9 @@ namespace DataLockerMSTests
             Plaintext = PicProg.GetCurrentPlaintext();
             Debug.WriteLine(Plaintext + "\n");
 
-            Debug.WriteLine($"Prog1 GetCurrentCiphertext at instantiation is:\n");
-            Ciphertext = PicProg.GetCurrentCiphertext();
-            Debug.WriteLine(Ciphertext + "\n");
-
+            Debug.WriteLine($"Prog1 encrypting:\n");
             Ciphertext = PicProg.EncryptLoadedData();
-            Debug.WriteLine($"Prog1 Encrypted plaintext. Displaying Ciphertext:\n {Ciphertext}\n");
+            Debug.WriteLine(Ciphertext + "\n");
 
             Plaintext = PicProg.DecryptLoadedData();
             Debug.WriteLine($"Prog1 Decrypted ciphertext, Displaying Plaintext:\n {Plaintext}\n");
@@ -125,6 +176,9 @@ namespace DataLockerMSTests
 
         public void TestDataEncryptDecryptToDisk()
         {
+            string Ciphertext = "";
+            string Plaintext = "";
+
             PicProg = new ApolloProgram(false, "NIMRODS", "script.cs");
 
             // First, check that it's not null.
@@ -137,10 +191,9 @@ namespace DataLockerMSTests
             Debug.WriteLine(Plaintext);
 
             Debug.WriteLine($"Encrypting...\n");
-            PicProg.EncryptLoadedData();
+            Ciphertext = PicProg.EncryptLoadedData();
 
             Debug.WriteLine($"Prog1 Ciphertext is:\n");
-            Ciphertext = PicProg.GetCurrentCiphertext();
             Debug.WriteLine(Ciphertext);
 
             Debug.WriteLine($"Saving...\n");
@@ -152,10 +205,9 @@ namespace DataLockerMSTests
             Ciphertext = PicProg2.GetCurrentCiphertext();
             Debug.WriteLine(Ciphertext);
 
-            PicProg2.DecryptLoadedData();
+            Plaintext = PicProg2.DecryptLoadedData();
 
             Debug.WriteLine($"Prog2 has decrypted its data:\n");
-            Plaintext = PicProg2.GetCurrentPlaintext();
             Debug.WriteLine(Plaintext);
 
             Assert.IsTrue(Plaintext.Equals(InitPlaintext));

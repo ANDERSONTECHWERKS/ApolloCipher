@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ApolloCipher
 {
     // It's a linkedList that we chain cipherblocks with
-    class ApolloCipherBlockChain
+    internal class ApolloCipherBlockChain
     {
         private ApolloCipherBlock TermBlock;
 
@@ -107,7 +107,7 @@ namespace ApolloCipher
                 {
                     // Otherwise: Below is the normal block processing up until we reach the end.
                     // If false: We copy the entire block
-                    for (int i = 0;  i <= 31; i++)
+                    for (int i = 0;  i < 32; i++)
                     {
                         tmpByteArr[i] = plaintextBytes[ByteIterator + i];
                     }
@@ -119,6 +119,36 @@ namespace ApolloCipher
                     continue;
                 }
             }
+        }
+
+        public static string PrintPlaintextByteChain(ApolloCipherBlockChain head, int colWidth)
+        {
+            string Result = "";
+            int iteratorInt = 0;
+
+            ApolloCipherBlockChain iterBC = head;
+
+            while (iterBC.Next != null)
+            {
+                Result += iterBC.Value.GetPlainTextBytes();
+
+                if (iteratorInt % colWidth == 0)
+                {
+                    Result += "\n";
+                }
+
+                iterBC = iterBC.Next;
+                iteratorInt++;
+            }
+
+            if (iteratorInt % colWidth == 0)
+            {
+                Result += "\n";
+            }
+
+            Result += iterBC.Value.GetPlainTextBytes();
+
+            return Result;
         }
 
         public void SetSecret1(byte newSecret1)
@@ -190,7 +220,7 @@ namespace ApolloCipher
                 tmpChain = tmpChain.Next;
             }
 
-            result += tmpChain.Value.GetPlainTextString() + "\n";
+            result += tmpChain.Value.GetPlainTextString().TrimEnd();
 
             return result;
         }
@@ -304,6 +334,7 @@ namespace ApolloCipher
                 return Result.TrimEnd('\0');
             }
 
+           
         }
 
         public void SwapCiphertextPlaintextChain()

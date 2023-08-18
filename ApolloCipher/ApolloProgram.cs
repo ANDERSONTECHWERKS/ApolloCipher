@@ -21,6 +21,7 @@ namespace ApolloCipher
         byte Secret2 = 66;
         byte TerminationByte = 42;
 
+
         //TODO: XORGen experiments.
         public static void XORGen()
         {
@@ -44,6 +45,15 @@ namespace ApolloCipher
             this.Password = password;
             this.DataEncrypted = ciphertextData;
             this.LoadDataFromFile(filename, ciphertextData);
+        }
+
+
+        // Credit where it's due.
+        // https://stackoverflow.com/questions/1003275/how-to-convert-utf-8-byte-to-string
+
+        public static string ConvertByteToString(byte[] source)
+        {
+            return source != null ? System.Text.Encoding.UTF8.GetString(source) : null;
         }
 
         public static void Main()
@@ -121,6 +131,11 @@ namespace ApolloCipher
             Console.WriteLine("Hope you enjoyed the demo! Press ENTER to quit.");
             Console.ReadLine();
 
+        }
+
+        internal ApolloCipherBlockChain GetCipherChain()
+        {
+            return this.CipherChain;
         }
 
         byte[] CreateKeyBuffer(string key)
@@ -221,9 +236,13 @@ namespace ApolloCipher
             {
                 // we always encrypt, regardless of whether or not already encrypted
                 // TODO: Maybe this would be a good place to check if we are trying to encrypt something with our own key?
+                
                 this.DataEncrypted = true;
                 this.Data = CipherChain.EncryptChain();
-                return CipherChain.EncryptChain();
+                return this.Data;
+                
+
+                // Let's be a 'one-way' API. Return plaintext if Data is encrypted and you ask us to encrypt it again.
             }
 
         }
@@ -256,15 +275,19 @@ namespace ApolloCipher
 
             ApolloCipherBlock NewBlock;
 
-            this.CipherChain = new ApolloCipherBlockChain(DataEncrypted, Password, Secret1, Secret2);
+            this.DataEncrypted = DataEncrypted;
+
+            this.CipherChain = new ApolloCipherBlockChain(DataEncrypted, this.Password, Secret1, Secret2);
+
 
             try
             {
                 if (File.Exists(filename))
                 {
                     reader = new StreamReader(filename, Encoding.UTF8);
-                    FileByteArr = new byte[File.ReadAllBytes(filename).Length];
-                    FileByteArr = File.ReadAllBytes(filename);
+                    this.Data = reader.ReadToEnd();
+                    FileByteArr = Encoding.UTF8.GetBytes(this.Data);
+
                     this.LoadedFileBytes = FileByteArr;
                 }
                 else
@@ -289,20 +312,11 @@ namespace ApolloCipher
                 {
                     TempByteArr = new byte[32];
 
-                    Buffer.BlockCopy(FileByteArr, i, TempByteArr, 0, FileByteLen - i);
+                    Buffer.BlockCopy(FileByteArr, i, TempByteArr, 0, FileByteLen - i - 1);
 
                     NewBlock = new ApolloCipherBlock(TempByteArr, this.Password, this.Secret1, this.Secret2, this.DataEncrypted);
 
                     this.CipherChain.AddBlockToTail(this.CipherChain, NewBlock);
-
-                    if (DataEncrypted)
-                    {
-                        this.Data += NewBlock.GetCipherTextString();
-                    }
-                    else
-                    {
-                        this.Data += NewBlock.GetPlainTextString();
-                    }
 
                     // If we are loading unencrypted data - add a terminating block.
                     // We only want to add terminating blocks when we think we are going to encrypt - we don't add terminating blocks 
@@ -312,6 +326,9 @@ namespace ApolloCipher
                         // Attach terminating block to chain (haha it's a linkedlist but y'know: "cHaIn").
                         ApolloCipherBlock TermBlock = ApolloCipherBlock.GenerateTerminatingBlock(this.Data.Length, this.Password, Secret1, Secret2, this.DataEncrypted);
                         this.CipherChain.AddBlockToTail(this.CipherChain, TermBlock);
+                    } else
+                    {
+                        // Oh wait, we allow re-encryption, eh?
                     }
                 }
                 else
@@ -323,19 +340,11 @@ namespace ApolloCipher
                     NewBlock = new ApolloCipherBlock(TempByteArr, this.Password, this.Secret1, this.Secret2, this.DataEncrypted);
 
                     this.CipherChain.AddBlockToTail(this.CipherChain, NewBlock);
-
-
-                    if (DataEncrypted)
-                    {
-                        this.Data += NewBlock.GetCipherTextString();
-                    }
-                    else
-                    {
-                        this.Data += NewBlock.GetPlainTextString();
-                    }
                 }
             }
 
+            reader.Dispose();
+            reader.Close();
         }
 
         public void SaveCipherTextToFile(string filename)
