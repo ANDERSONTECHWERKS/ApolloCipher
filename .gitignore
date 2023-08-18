@@ -5,3 +5,10 @@
 /ApolloCipherMSTests/obj/*
 /ApolloCipherMSTests/bin/*
 /ApolloCipherMSTests/bin/TestResults/*
+*.cache
+*.json
+*.cache
+*.targets
+*.props
+*.json
+*.DotSettings
