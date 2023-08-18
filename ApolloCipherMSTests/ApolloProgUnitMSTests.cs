@@ -147,6 +147,21 @@ namespace ApolloCipher
             Assert.IsTrue(pt2.Equals(data));
             
         }
+        [TestMethod]
+        public void encryptSingleChar()
+        {
+            string Ciphertext = "";
+            string Plaintext = "C";
+
+            PicProg = new ApolloProgram(Plaintext,false,"cookie");
+            Ciphertext = PicProg.EncryptLoadedData();
+            Assert.IsTrue(PicProg.DecryptLoadedData().Equals(Plaintext));
+
+            Plaintext = ".";
+            PicProg = new ApolloProgram(Plaintext, false, "cookie");
+            Ciphertext = PicProg.EncryptLoadedData();
+            Assert.IsTrue(PicProg.DecryptLoadedData().Equals(Plaintext));
+        }
 
         [TestMethod]
         public void TestInternalShiftingOps()
@@ -178,6 +193,7 @@ namespace ApolloCipher
         {
             string Ciphertext = "";
             string Plaintext = "";
+            string InitPlaintext = "";
 
             PicProg = new ApolloProgram(false, "NIMRODS", "script.cs");
 
@@ -209,6 +225,9 @@ namespace ApolloCipher
 
             Debug.WriteLine($"Prog2 has decrypted its data:\n");
             Debug.WriteLine(Plaintext);
+
+            PicProg2.SaveCipherTextToFile("picProg2CT.txt");
+            PicProg2.SavePlainTextToFile("picProg2PT.txt");
 
             Assert.IsTrue(Plaintext.Equals(InitPlaintext));
         }

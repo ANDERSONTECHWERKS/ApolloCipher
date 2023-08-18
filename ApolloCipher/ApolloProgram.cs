@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace ApolloCipher
@@ -259,6 +257,7 @@ namespace ApolloCipher
             else
             {
                 // If the script is already decrypted - just return plaintext.
+                this.DataEncrypted = false;
                 return this.CipherChain.GetChainPlainText();
             }
         }
@@ -312,7 +311,7 @@ namespace ApolloCipher
                 {
                     TempByteArr = new byte[32];
 
-                    Buffer.BlockCopy(FileByteArr, i, TempByteArr, 0, FileByteLen - i - 1);
+                    Buffer.BlockCopy(FileByteArr, i, TempByteArr, 0, FileByteLen - i);
 
                     NewBlock = new ApolloCipherBlock(TempByteArr, this.Password, this.Secret1, this.Secret2, this.DataEncrypted);
 
@@ -321,6 +320,8 @@ namespace ApolloCipher
                     // If we are loading unencrypted data - add a terminating block.
                     // We only want to add terminating blocks when we think we are going to encrypt - we don't add terminating blocks 
                     // and then decrypt. That's just confusion.
+
+                    /* We do NOT add a tail until it's time to encrypt!
                     if (!DataEncrypted)
                     {
                         // Attach terminating block to chain (haha it's a linkedlist but y'know: "cHaIn").
@@ -330,6 +331,7 @@ namespace ApolloCipher
                     {
                         // Oh wait, we allow re-encryption, eh?
                     }
+                    */
                 }
                 else
                 {
@@ -349,6 +351,7 @@ namespace ApolloCipher
 
         public void SaveCipherTextToFile(string filename)
         {
+            
             StreamWriter writer = new StreamWriter(filename, false, Encoding.UTF8);
             writer.Write(this.CipherChain.GetChainCipherText());
             writer.Flush();
@@ -370,7 +373,7 @@ namespace ApolloCipher
 
         public string GetCurrentPlaintext()
         {
-            return this.CipherChain.GetChainPlainText();
+            return this.CipherChain.GetChainPlainText().TrimEnd('\0');
         }
 
         public void SetCipherText(string cipherText)
