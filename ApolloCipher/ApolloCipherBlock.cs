@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,39 +24,43 @@ namespace ApolloCipher
         private byte SecretByte1;
         private byte SecretByte2;
 
+        private bool EncryptedBool = false;
+
         // Used only to generate terminating blocks
-        private ApolloCipherBlock(int strLen, string password, byte SecretByte1, byte SecretByte2, bool ScriptEncrypted)
+        private ApolloCipherBlock(int strLen, string password, byte SecretByte1, byte SecretByte2, bool blockEncrypted)
         {
 
-            if (ScriptEncrypted)
+            if (blockEncrypted)
             {
                 CryptoIterator = 0;
 
                 this.PasswordByteArr = Encoding.UTF8.GetBytes(password);
 
                 this.CipherTextByteArr = new byte[32];
-                this.CipherTextByteArr = Encoding.UTF8.GetBytes(strLen.ToString());
+                Encoding.UTF8.GetBytes(strLen.ToString()).CopyTo(CipherTextByteArr,0);
                 this.CipherTextString = strLen.ToString();
 
                 this.PlainTextByteArr = new byte[32];
-                this.PlainTextString = "";
+                Encoding.UTF8.GetBytes(strLen.ToString()).CopyTo(PlainTextByteArr, 0);
+                this.PlainTextString = strLen.ToString();
 
                 // Get our secrets from the chain
                 this.SecretByte1 = SecretByte1;
                 this.SecretByte2 = SecretByte2;
 
-            } else
+            }
+            else
             {
                 CryptoIterator = 0;
 
                 this.PasswordByteArr = Encoding.UTF8.GetBytes(password);
 
                 this.CipherTextByteArr = new byte[32];
-                this.CipherTextByteArr = Encoding.UTF8.GetBytes(strLen.ToString());
+                Encoding.UTF8.GetBytes(strLen.ToString()).CopyTo(CipherTextByteArr,0);
                 this.CipherTextString = strLen.ToString();
 
                 this.PlainTextByteArr = new byte[32];
-                this.PlainTextByteArr = Encoding.UTF8.GetBytes(strLen.ToString());
+                Encoding.UTF8.GetBytes(strLen.ToString()).CopyTo(PlainTextByteArr, 0);
                 this.PlainTextString = strLen.ToString();
 
                 // Get our secrets from the chain
@@ -67,33 +70,46 @@ namespace ApolloCipher
 
         }
 
-        public ApolloCipherBlock(string plaintext, string password, byte SecretByte1, byte SecretByte2)
+        public ApolloCipherBlock(string data, string password, byte SecretByte1, byte SecretByte2, bool encryptBlock)
         {
             CryptoIterator = 0;
 
+            if (encryptBlock)
+            {
+                this.CipherTextByteArr = Encoding.UTF8.GetBytes(data);
+                this.CipherTextString = data;
 
-            this.PlainTextByteArr = Encoding.UTF8.GetBytes(plaintext);
-            this.PasswordByteArr = Encoding.UTF8.GetBytes(password);
-            
-            
+                this.PasswordByteArr = Encoding.UTF8.GetBytes(password);
+
+                this.PlainTextByteArr = null;
+                this.PlainTextString = "";
+            }
+            else
+            {
+                this.CipherTextByteArr = null;
+                this.CipherTextString = "";
+
+                this.PasswordByteArr = Encoding.UTF8.GetBytes(password);
+
+                this.PlainTextString = data;
+                this.PlainTextByteArr = Encoding.UTF8.GetBytes(data);
+            }
+
             // Get our secrets from the chain
             this.SecretByte1 = SecretByte1;
             this.SecretByte2 = SecretByte2;
-
-            // Encrypt the plaintext we received
-            this.EncryptPlainTextBlockPwd();
         }
 
-        public ApolloCipherBlock(byte[] dataBytes, string password, byte SecretByte1, byte SecretByte2, bool ScriptEncrypted)
+        public ApolloCipherBlock(byte[] dataBytes, string password, byte SecretByte1, byte SecretByte2, bool blockEncrypted)
         {
             if (dataBytes.Length <= 32)
             {
-                if (ScriptEncrypted)
+                if (blockEncrypted)
                 {
                     CryptoIterator = 0;
 
                     this.CipherTextByteArr = dataBytes;
-                    this.CipherTextString = Encoding.UTF8.GetString(dataBytes);
+                    this.CipherTextString = Encoding.UTF8.GetString(dataBytes, 0, 32);
 
                     this.PasswordByteArr = Encoding.UTF8.GetBytes(password);
 
@@ -110,7 +126,7 @@ namespace ApolloCipher
                     CryptoIterator = 0;
 
                     this.PlainTextByteArr = dataBytes;
-                    this.PlainTextString = Encoding.UTF8.GetString(dataBytes);
+                    this.PlainTextString = Encoding.UTF8.GetString(dataBytes, 0, 32);
 
                     this.PasswordByteArr = Encoding.UTF8.GetBytes(password);
 
@@ -130,9 +146,9 @@ namespace ApolloCipher
             }
         }
 
-        public static ApolloCipherBlock GenerateTerminatingBlock(int strLen, string password, byte Secret1, byte Secret2, bool ScriptEncrypted)
+        public static ApolloCipherBlock GenerateTerminatingBlock(int strLen, string password, byte Secret1, byte Secret2, bool DataEncrypted)
         {
-            return new ApolloCipherBlock(strLen, password, Secret1, Secret2, ScriptEncrypted);
+            return new ApolloCipherBlock(strLen, password, Secret1, Secret2, DataEncrypted);
         }
 
         public void PrintPlainTextByteVals()
@@ -141,7 +157,7 @@ namespace ApolloCipher
 
             foreach (byte byteValue in PlainTextByteArr)
             {
-                Console.WriteLine(byteValue + $"-> {(char)byteValue}");
+                Console.WriteLine(byteValue.ToString() + $"-> {(char)byteValue}");
             }
         }
 
@@ -150,7 +166,7 @@ namespace ApolloCipher
             Console.WriteLine($"Current ciphertext bytes are:");
             foreach (byte byteValue in CipherTextByteArr)
             {
-                Console.WriteLine(byteValue + $"-> {(char)byteValue}");
+                Console.WriteLine(byteValue.ToString() + $"-> {(char)byteValue}");
             }
         }
 
@@ -169,12 +185,13 @@ namespace ApolloCipher
 
         public string GetPlainTextString()
         {
-            return Encoding.UTF8.GetString(PlainTextByteArr, 0, PlainTextByteArr.Length);
+
+            return Encoding.UTF8.GetString(PlainTextByteArr, 0, 32);
         }
 
         public string GetCipherTextString()
         {
-            return Encoding.UTF8.GetString(CipherTextByteArr, 0, CipherTextByteArr.Length);
+            return Encoding.UTF8.GetString(CipherTextByteArr, 0, 32);
         }
 
         public byte[] GetCipherTextBytes()
@@ -192,9 +209,6 @@ namespace ApolloCipher
             byte[] tempArr = new byte[32];
             byte tempByte;
             byte tempPasswordByte;
-
-            bool FoundTerminationMarker = false;
-            int TerminatorIndicatedIndex = 0;
 
             CryptoIterator = 0;
             CipherTextByteArr.CopyTo(tempArr, 0);
@@ -221,37 +235,14 @@ namespace ApolloCipher
                 tempByte = (byte)(tempByte ^ SecretByte2);
                 tempByte = (byte)(tempByte ^ SecretByte1);
 
-                /* We're gonna manage the termination byte at the chain level
-                if (tempByte.Equals(TerminationByte))
-                {
-                    // Currently: We aren't really doing anything with the terminationbyte besides marking-and-forgetting.
-                    // Anyways - here's some framework.
-                    try
-                    {
-                        FoundTerminationMarker = true;
-                        TerminatorIndicatedIndex = (int)tempByte;
-                        PlainTextString = Encoding.UTF8.GetString(tempArr);
-
-                        PlainTextByteArr = tempArr;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Failed to parse terminating byte!");
-                        throw ex;
-                    }
-
-                }
-                */
-
                 tempArr[i] = tempByte;
             }
 
             // Blank the ciphertext once we're done with it.
             CipherTextString = "";
-            Array.Clear(CipherTextByteArr);
+            Array.Clear(CipherTextByteArr, 0, CipherTextByteArr.Length - 1);
 
-            PlainTextString = Encoding.UTF8.GetString(tempArr);
+            PlainTextString = Encoding.UTF8.GetString(tempArr, 0, 32);
             PlainTextByteArr = tempArr;
         }
 
@@ -262,9 +253,6 @@ namespace ApolloCipher
             byte[] tempArr = new byte[32];
             byte tempByte;
             byte tempPasswordByte;
-
-            int TerminationIndex = 0;
-            bool PlacedTerminationMarker = false;
 
             CryptoIterator = 0;
 
@@ -297,11 +285,11 @@ namespace ApolloCipher
             }
 
             PlainTextString = "";
-            Array.Clear(PlainTextByteArr);
+            Array.Clear(PlainTextByteArr, 0, PlainTextByteArr.Length - 1);
 
             CipherTextByteArr = tempArr;
-            CipherTextString = Encoding.UTF8.GetString(tempArr);
-            
+            CipherTextString = Encoding.UTF8.GetString(tempArr, 0, 32);
+
         }
 
         public void SwapPlaintextCiphertextBlock()

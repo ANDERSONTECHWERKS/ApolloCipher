@@ -9,36 +9,68 @@ namespace ApolloCipher
     // It's a linkedList that we chain cipherblocks with
     class ApolloCipherBlockChain
     {
-        private ApolloCipherBlock Terminator;
+        private ApolloCipherBlock TermBlock;
 
-        private ApolloCipherBlock blockValue;
-        private ApolloCipherBlockChain? next;
-        private ApolloCipherBlockChain? prev;
+        private ApolloCipherBlock Value;
+        private ApolloCipherBlockChain Next;
+        private ApolloCipherBlockChain Prev;
 
         // Secret Bytes used for XORing to add confusion
         private byte SecretByte1 = 69;
         private byte SecretByte2 = 66;
 
         // Terminating byte will be SecretByte1 ^ SecretByte2, eventually. If this is ever zero: Something has gone wrong.
-        private bool ScriptEncrypted = false;
+        private bool DataEncrypted = false;
 
-        public ApolloCipherBlockChain(ApolloCipherBlock head)
+        private string Password = "";
+
+        // Generic stuff for counting and debug
+        private int BlockCount = 0;
+
+        internal ApolloCipherBlockChain(bool dataEncrypted, string password, byte SecretByte1, byte SecretByte2)
         {
-            blockValue = head;
-            next = null;
-            prev = null;
+            DataEncrypted = dataEncrypted;
+            Value = null;
+            Next = null;
+            Prev = null;
+
+            this.SecretByte1 = SecretByte1;
+            this.SecretByte2 = SecretByte2;
+
+            this.Password = password;
         }
 
-        public ApolloCipherBlockChain(string plaintext, string password, byte SecretByte1, byte SecretByte2, bool ScriptEncrypted)
+        internal ApolloCipherBlockChain(ApolloCipherBlock head, string password, bool dataEncrypted, byte SecretByte1, byte SecretByte2)
+        {
+            DataEncrypted = dataEncrypted;
+            Value = head;
+            Next = null;
+            Prev = null;
+
+            // Blockcount is one. The head. The head we attached right above.
+            BlockCount = 1;
+
+            this.SecretByte1 = SecretByte1;
+            this.SecretByte2 = SecretByte2;
+
+            this.Password = password;
+
+        }
+
+
+
+        public ApolloCipherBlockChain(string data, string password, byte SecretByte1, byte SecretByte2, bool DataEncrypted)
         {
             this.SecretByte1 = SecretByte1;
             this.SecretByte2 = SecretByte2;
 
-            this.ScriptEncrypted = ScriptEncrypted;
+            this.DataEncrypted = DataEncrypted;
+
+            this.Password = password;
 
             ApolloCipherBlock IterBlock;
 
-            byte[] plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
+            byte[] plaintextBytes = Encoding.UTF8.GetBytes(data);
             byte[] tmpByteArr;
             
             int ByteIterator = 0;
@@ -59,13 +91,15 @@ namespace ApolloCipher
                         tmpByteArr[i] = plaintextBytes[ByteIterator + i];
                     }
 
-                    IterBlock = new ApolloCipherBlock(tmpByteArr,password,SecretByte1,SecretByte2, ScriptEncrypted);
+                    IterBlock = new ApolloCipherBlock(tmpByteArr,password,SecretByte1,SecretByte2, DataEncrypted);
 
                     AddBlockToTail(this,IterBlock);
 
                     // Lets create a termination block to add at the end of each chain. This block will contain the stringlength, used to truncate
                     // the decryped message.
-                    ApolloCipherBlock TermBlock = ApolloCipherBlock.GenerateTerminatingBlock(PlaintextLength,password,SecretByte1,SecretByte2,ScriptEncrypted);
+                    
+                    TermBlock = ApolloCipherBlock.GenerateTerminatingBlock(PlaintextLength,password,SecretByte1,SecretByte2,DataEncrypted);
+                    
                     AddBlockToTail(this, TermBlock);
 
                     break;
@@ -78,7 +112,7 @@ namespace ApolloCipher
                         tmpByteArr[i] = plaintextBytes[ByteIterator + i];
                     }
 
-                    IterBlock = new ApolloCipherBlock(tmpByteArr, password, SecretByte1, SecretByte2, ScriptEncrypted);
+                    IterBlock = new ApolloCipherBlock(tmpByteArr, password, SecretByte1, SecretByte2, DataEncrypted);
                     AddBlockToTail(this, IterBlock);
 
                     ByteIterator += 32;
@@ -111,33 +145,37 @@ namespace ApolloCipher
             ApolloCipherBlockChain prev = blockchain;
 
             // Check head
-            if(blockchain.blockValue == null)
+            if (blockchain.Value == null)
             {
-                blockchain.blockValue = block;
-                blockchain.next = null;
-                blockchain.prev = null;
+                blockchain.Value = block;
+                blockchain.Next = null;
+                blockchain.Prev = null;
                 return;
             }
 
             // Check next
-            if (blockchain.next == null)
+            if (blockchain.Next == null)
             {
-                blockchain.next = new ApolloCipherBlockChain(block);
+                blockchain.Next = new ApolloCipherBlockChain(block,Password, DataEncrypted, SecretByte1, SecretByte2);
             }
             else
             {
                 // Iterate...
-                while (blockchain.next != null)
+                while (blockchain.Next != null)
                 {
                     prev = blockchain;
-                    blockchain = blockchain.next;
+                    blockchain = blockchain.Next;
                 }
 
 
                 // assign new node to tail, assign 'previous' block to prior.
-                blockchain.next = new ApolloCipherBlockChain(block);
-                blockchain.next.prev = blockchain;
+                blockchain.Next = new ApolloCipherBlockChain(block, Password, DataEncrypted, SecretByte1, SecretByte2);
+                blockchain.Next.Prev = blockchain;
             }
+
+            // increment blockcount. We assume we were successful.
+            BlockCount++;
+
         }
 
         public string GetChainPlainText()
@@ -145,15 +183,14 @@ namespace ApolloCipher
             ApolloCipherBlockChain tmpChain = this;
             string result = "";
 
-            while (tmpChain.next != null)
+            while (tmpChain.Next != null)
             {
-                result += tmpChain.blockValue.GetPlainTextString();
+                result += tmpChain.Value.GetPlainTextString();
 
-                tmpChain = tmpChain.next;
-
+                tmpChain = tmpChain.Next;
             }
 
-            result += tmpChain.blockValue.GetPlainTextString();
+            result += tmpChain.Value.GetPlainTextString() + "\n";
 
             return result;
         }
@@ -163,15 +200,15 @@ namespace ApolloCipher
             ApolloCipherBlockChain tmpChain = this;
             string result = "";
 
-            while (tmpChain.next != null)
+            while (tmpChain.Next != null)
             {
-                result += tmpChain.blockValue.GetCipherTextString();
+                result += tmpChain.Value.GetCipherTextString();
 
-                tmpChain = tmpChain.next;
+                tmpChain = tmpChain.Next;
 
             }
 
-            result += tmpChain.blockValue.GetCipherTextString();
+            result += tmpChain.Value.GetCipherTextString();
 
             return result;
         }
@@ -181,18 +218,18 @@ namespace ApolloCipher
             ApolloCipherBlockChain tmpChain = this;
             string result = "";
 
-            while (tmpChain.next != null)
+            while (tmpChain.Next != null)
             {
-                tmpChain.blockValue.EncryptPlainTextBlockPwd();
+                tmpChain.Value.EncryptPlainTextBlockPwd();
 
-                result += tmpChain.blockValue.GetCipherTextString();
+                result += tmpChain.Value.GetCipherTextString();
 
-                tmpChain = tmpChain.next;
+                tmpChain = tmpChain.Next;
 
             }
 
-            tmpChain.blockValue.EncryptPlainTextBlockPwd();
-            result += tmpChain.blockValue.GetCipherTextString();
+            tmpChain.Value.EncryptPlainTextBlockPwd();
+            result += tmpChain.Value.GetCipherTextString();
 
             return result;
         }
@@ -201,36 +238,38 @@ namespace ApolloCipher
         {
             ApolloCipherBlockChain tmpChain = this;
             string TermIndexStr = "";
-            int? TerminationIndex = null;
+            int TerminationIndex = -1;
             byte[] indexBytes = new byte[4];
             byte[] TermIndexPlaintextByteArr;
             string Result = "";
             
-            while (tmpChain.next != null)
+            while (tmpChain.Next != null)
             {
                 
-                tmpChain.blockValue.DecryptCipherTextBlockPwd();
+                tmpChain.Value.DecryptCipherTextBlockPwd();
 
-                Result += tmpChain.blockValue.GetPlainTextString();
+                Result += tmpChain.Value.GetPlainTextString();
 
-                tmpChain = tmpChain.next;
+                tmpChain = tmpChain.Next;
 
             }
 
             // At this point - we expect and check for the terminator block.
 
             // TODO: Figure out why the data gets mangled in this call to DecryptCipher...PWD()
-            tmpChain.blockValue.DecryptCipherTextBlockPwd();
+            tmpChain.Value.DecryptCipherTextBlockPwd();
 
             // Once we detect where the string is *supposed* to end - copy that substring to the result.
-            TermIndexPlaintextByteArr = tmpChain.blockValue.GetPlainTextBytes();
+            TermIndexPlaintextByteArr = tmpChain.Value.GetPlainTextBytes();
 
             indexBytes[0] = TermIndexPlaintextByteArr[0];
             indexBytes[1] = TermIndexPlaintextByteArr[1];
             indexBytes[2] = TermIndexPlaintextByteArr[2];
             indexBytes[3] = TermIndexPlaintextByteArr[3];
 
-            TermIndexStr = Encoding.UTF8.GetString(indexBytes);
+            // This is the exception: We are only intersted in the first four bytes
+            TermIndexStr = Encoding.UTF8.GetString(indexBytes, 0, 4);
+
             try
             {
                 TerminationIndex = Int32.Parse(TermIndexStr);
@@ -252,25 +291,28 @@ namespace ApolloCipher
             }
 
             // Check if we were able to parse a termination index. If not - we'll just decrypt the whole thing.
-            if (TerminationIndex != null)
+            if (TerminationIndex >= 0)
             {
-                Result = Result.Substring(0, TerminationIndex.Value);
-                return Result;
+                Result = Result.Substring(0, TerminationIndex);
+                this.DataEncrypted = false;
+                return Result.TrimEnd('\0');
 
             } else
             {
-                Result += tmpChain.blockValue.GetPlainTextString();
-                return Result;
+                Result += tmpChain.Value.GetPlainTextString();
+                this.DataEncrypted = false;
+                return Result.TrimEnd('\0');
             }
+
         }
 
         public void SwapCiphertextPlaintextChain()
         {
             ApolloCipherBlockChain tmpChain = this;
 
-            while (tmpChain.next != null)
+            while (tmpChain.Next != null)
             {
-                tmpChain.blockValue.SwapPlaintextCiphertextBlock();
+                tmpChain.Value.SwapPlaintextCiphertextBlock();
             }
         }
     }
