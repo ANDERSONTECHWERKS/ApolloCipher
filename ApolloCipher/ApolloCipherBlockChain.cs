@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ApolloCipher
 {
     // It's a linkedList that we chain cipherblocks with
-    class ApolloCipherBlockChain
+    internal class ApolloCipherBlockChain
     {
         private ApolloCipherBlock TermBlock;
 
@@ -74,19 +74,19 @@ namespace ApolloCipher
             byte[] tmpByteArr;
             
             int ByteIterator = 0;
-            Int32 PlaintextLength = plaintextBytes.Length;
+            Int32 PlaintextByteLength = plaintextBytes.Length;
 
-            while(ByteIterator < PlaintextLength) {
+            while(ByteIterator < PlaintextByteLength) {
 
                 tmpByteArr = new byte[32];
 
                 // Check if we are about to run over the array (end of plaintext string)
 
                 // To be clear: this first 'if' condition hit when we are *at the end of the string*, AKA: "We have gone over plaintext len"
-                if (ByteIterator + 32 > PlaintextLength)
+                if (ByteIterator + 32 > PlaintextByteLength)
                 {
                     // If true: We only copy to the end of the array
-                    for (int i = 0; ByteIterator + i <= PlaintextLength - 1; i++)
+                    for (int i = 0; (ByteIterator + i) < (PlaintextByteLength); i++)
                     {
                         tmpByteArr[i] = plaintextBytes[ByteIterator + i];
                     }
@@ -97,17 +97,18 @@ namespace ApolloCipher
 
                     // Lets create a termination block to add at the end of each chain. This block will contain the stringlength, used to truncate
                     // the decryped message.
-                    
-                    TermBlock = ApolloCipherBlock.GenerateTerminatingBlock(PlaintextLength,password,SecretByte1,SecretByte2,DataEncrypted);
+                    /* No terminal blocks until encryption. 
+                    TermBlock = ApolloCipherBlock.GenerateTerminatingBlock(PlaintextByteLength,password,SecretByte1,SecretByte2,DataEncrypted);
                     
                     AddBlockToTail(this, TermBlock);
+                    */
 
                     break;
                 } else
                 {
                     // Otherwise: Below is the normal block processing up until we reach the end.
                     // If false: We copy the entire block
-                    for (int i = 0;  i <= 31; i++)
+                    for (int i = 0;  i < 32; i++)
                     {
                         tmpByteArr[i] = plaintextBytes[ByteIterator + i];
                     }
@@ -119,6 +120,36 @@ namespace ApolloCipher
                     continue;
                 }
             }
+        }
+
+        public static string PrintPlaintextByteChain(ApolloCipherBlockChain head, int colWidth)
+        {
+            string Result = "";
+            int iteratorInt = 0;
+
+            ApolloCipherBlockChain iterBC = head;
+
+            while (iterBC.Next != null)
+            {
+                Result += iterBC.Value.GetPlainTextBytes();
+
+                if (iteratorInt % colWidth == 0)
+                {
+                    Result += "\n";
+                }
+
+                iterBC = iterBC.Next;
+                iteratorInt++;
+            }
+
+            if (iteratorInt % colWidth == 0)
+            {
+                Result += "\n";
+            }
+
+            Result += iterBC.Value.GetPlainTextBytes();
+
+            return Result;
         }
 
         public void SetSecret1(byte newSecret1)
@@ -150,6 +181,7 @@ namespace ApolloCipher
                 blockchain.Value = block;
                 blockchain.Next = null;
                 blockchain.Prev = null;
+                this.BlockCount++;
                 return;
             }
 
@@ -175,7 +207,7 @@ namespace ApolloCipher
 
             // increment blockcount. We assume we were successful.
             BlockCount++;
-
+            return;
         }
 
         public string GetChainPlainText()
@@ -190,9 +222,30 @@ namespace ApolloCipher
                 tmpChain = tmpChain.Next;
             }
 
-            result += tmpChain.Value.GetPlainTextString() + "\n";
+            result += tmpChain.Value.GetPlainTextString().TrimEnd();
 
             return result;
+        }
+        public ApolloCipherBlock GetLastCipherBlockInChain()
+        {
+            // Simply find the last node in a linkedlist. Classic CS problem.
+
+            // First - check if we are sitting on empty nodes. We're gonna assume that if our 'head' is null - there's
+            // nothing further in the linkedlist.
+            if(this.Value == null)
+            {
+                return null;
+            }
+
+            ApolloCipherBlockChain TMPBlockChain = this;
+
+            while(TMPBlockChain != null)
+            {
+                TMPBlockChain = this.Next;
+            }
+
+            return TMPBlockChain.Value;
+
         }
 
         public string GetChainCipherText()
@@ -217,6 +270,12 @@ namespace ApolloCipher
         {
             ApolloCipherBlockChain tmpChain = this;
             string result = "";
+            int DataLength = this.GetChainPlainText().Length;
+
+            // Create a terminal block, and add to tail.
+            ApolloCipherBlock TerminalBlock = ApolloCipherBlock.GenerateTerminatingBlock(DataLength,this.Password,this.SecretByte1,this.SecretByte2,false);
+
+            AddBlockToTail(this,TerminalBlock);
 
             while (tmpChain.Next != null)
             {
@@ -231,6 +290,7 @@ namespace ApolloCipher
             tmpChain.Value.EncryptPlainTextBlockPwd();
             result += tmpChain.Value.GetCipherTextString();
 
+            
             return result;
         }
 
@@ -304,6 +364,7 @@ namespace ApolloCipher
                 return Result.TrimEnd('\0');
             }
 
+           
         }
 
         public void SwapCiphertextPlaintextChain()
