@@ -244,8 +244,9 @@ namespace ApolloCipher
             byte tempPasswordByte;
 
             CryptoIterator = 0;
-            //CipherTextByteArr.CopyTo(tempArr, 0);
+
             Array.Copy(CipherTextByteArr, 0, tempArr, 0, 32);
+
             // Where we undo the XORing with our password
             for (int i = 0; i < tempArr.Length; i++)
             {
@@ -255,14 +256,18 @@ namespace ApolloCipher
                 {
                     tempPasswordByte = PasswordByteArr[CryptoIterator];
                     tempByte = (byte)((tempByte ^ tempPasswordByte));
+
                     CryptoIterator++;
                 }
                 else
                 {
                     // We reset *first*, because we assume the above "if" has already shifted the byte behind us
                     CryptoIterator = 0;
+
                     tempPasswordByte = PasswordByteArr[CryptoIterator];
                     tempByte = (byte)((tempByte ^ tempPasswordByte));
+
+                    CryptoIterator++;
                 }
 
                 tempByte = (byte)(tempByte ^ SecretByte2);
@@ -305,21 +310,26 @@ namespace ApolloCipher
                 {
                     tempPasswordByte = PasswordByteArr[CryptoIterator];
                     tempByte = (byte)((tempByte ^ tempPasswordByte));
+
                     CryptoIterator++;
                 }
                 else
                 {
                     // We reset *first*, because we assume the above "if" has already shifted the byte behind us
                     CryptoIterator = 0;
+
                     tempPasswordByte = PasswordByteArr[CryptoIterator];
                     tempByte = (byte)((tempByte ^ tempPasswordByte));
+
+                    CryptoIterator++;
                 }
 
                 tempArr[i] = tempByte;
             }
 
             PlainTextString = "";
-            Array.Clear(PlainTextByteArr, 0, PlainTextByteArr.Length - 1);
+
+            Array.Clear(PlainTextByteArr, 0, PlainTextByteArr.Length);
 
             CipherTextByteArr = tempArr;
             CipherTextString = Encoding.UTF8.GetString(tempArr, 0, 32);

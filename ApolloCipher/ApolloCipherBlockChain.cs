@@ -42,19 +42,16 @@ namespace ApolloCipher
 
         internal ApolloCipherBlockChain(ApolloCipherBlock head, string password, bool dataEncrypted, byte SecretByte1, byte SecretByte2)
         {
-            DataEncrypted = dataEncrypted;
-            Value = head;
-            Next = null;
-            Prev = null;
-
-            // Blockcount is one. The head. The head we attached right above.
-            BlockCount = 1;
-
+            this.DataEncrypted = dataEncrypted;
+            this.Value = head;
+            this.Next = null;
+            this.Prev = null;
             this.SecretByte1 = SecretByte1;
             this.SecretByte2 = SecretByte2;
-
             this.Password = password;
 
+            // Blockcount increment.
+            BlockCount++;
         }
 
 
@@ -274,7 +271,6 @@ namespace ApolloCipher
 
             // Create a terminal block, and add to tail.
             ApolloCipherBlock TerminalBlock = ApolloCipherBlock.GenerateTerminatingBlock(DataLength,this.Password,this.SecretByte1,this.SecretByte2,false);
-
             AddBlockToTail(this,TerminalBlock);
 
             while (tmpChain.Next != null)

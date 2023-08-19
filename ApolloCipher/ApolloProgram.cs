@@ -265,12 +265,11 @@ namespace ApolloCipher
         public void LoadDataFromFile(string filename, bool DataEncrypted)
         {
             byte[] FileByteArr;
-            byte[] TempByteArr = new byte[32];
+            byte[] FileChunkArr = new byte[32];
             byte TMPByte;
             int FileByteLen = 0;
             this.Data = "";
-
-            StreamReader reader;
+            BinaryReader reader;
 
             ApolloCipherBlock NewBlock;
 
@@ -283,9 +282,12 @@ namespace ApolloCipher
             {
                 if (File.Exists(filename))
                 {
-                    reader = new StreamReader(filename, Encoding.UTF8);
-                    this.Data = reader.ReadToEnd();
-                    FileByteArr = Encoding.UTF8.GetBytes(this.Data);
+                    Stream FilestreamInp = File.OpenRead(filename);
+                    reader = new BinaryReader(FilestreamInp, Encoding.UTF8);
+                    //reader = new StreamReader(filename, Encoding.UTF8);
+                    FileByteLen = (int)FilestreamInp.Length;
+                    FileByteArr = reader.ReadBytes(FileByteLen);
+                    this.Data = Encoding.UTF8.GetString(FileByteArr);
 
                     this.LoadedFileBytes = FileByteArr;
                 }
@@ -302,18 +304,19 @@ namespace ApolloCipher
 
             FileByteLen = FileByteArr.Length;
 
-            // Let's load the file byte by byte
+            
+            // Let's load the file block by block
             for (int i = 0; i < FileByteLen; i += 32)
             {
                 // This if-else determines the behavior for whether or not we are at the end of the string.
                 // Oddly enough - behavior for the end of the string is the 'if' part. I don't typically do it this way.
                 if (i + 32 >= FileByteLen)
                 {
-                    TempByteArr = new byte[32];
+                    FileChunkArr = new byte[32];
 
-                    Buffer.BlockCopy(FileByteArr, i, TempByteArr, 0, FileByteLen - i);
+                    Buffer.BlockCopy(FileByteArr, i, FileChunkArr, 0, FileByteLen - i);
 
-                    NewBlock = new ApolloCipherBlock(TempByteArr, this.Password, this.Secret1, this.Secret2, this.DataEncrypted);
+                    NewBlock = new ApolloCipherBlock(FileChunkArr, this.Password, this.Secret1, this.Secret2, this.DataEncrypted);
 
                     this.CipherChain.AddBlockToTail(this.CipherChain, NewBlock);
 
@@ -335,24 +338,27 @@ namespace ApolloCipher
                 }
                 else
                 {
-                    TempByteArr = new byte[32];
+                    FileChunkArr = new byte[32];
 
-                    Buffer.BlockCopy(FileByteArr, i, TempByteArr, 0, 32);
+                    Buffer.BlockCopy(FileByteArr, i, FileChunkArr, 0, 32);
 
-                    NewBlock = new ApolloCipherBlock(TempByteArr, this.Password, this.Secret1, this.Secret2, this.DataEncrypted);
+                    NewBlock = new ApolloCipherBlock(FileChunkArr, this.Password, this.Secret1, this.Secret2, this.DataEncrypted);
 
                     this.CipherChain.AddBlockToTail(this.CipherChain, NewBlock);
                 }
-            }
-
+            } 
+            
             reader.Dispose();
             reader.Close();
         }
 
         public void SaveCipherTextToFile(string filename)
         {
+            Stream FilestreamOut = File.Open(filename,FileMode.OpenOrCreate);
+            BinaryWriter writer = new BinaryWriter(FilestreamOut, Encoding.UTF8);
+
+            // StreamWriter writer = new StreamWriter(filename, false, Encoding.UTF8);
             
-            StreamWriter writer = new StreamWriter(filename, false, Encoding.UTF8);
             writer.Write(this.CipherChain.GetChainCipherText());
             writer.Flush();
             writer.Close();
@@ -360,7 +366,11 @@ namespace ApolloCipher
 
         public void SavePlainTextToFile(string filename)
         {
-            StreamWriter writer = new StreamWriter(filename, false, Encoding.UTF8);
+            Stream FilestreamOut = File.Open(filename, FileMode.OpenOrCreate);
+            BinaryWriter writer = new BinaryWriter(FilestreamOut, Encoding.UTF8);
+
+            //StreamWriter writer = new StreamWriter(filename, false, Encoding.UTF8);
+
             writer.Write(this.CipherChain.GetChainPlainText());
             writer.Flush();
             writer.Close();

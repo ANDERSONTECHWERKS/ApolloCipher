@@ -1,4 +1,4 @@
-using System.ComponentModel.Design;
+﻿using System.ComponentModel.Design;
 using System;
 using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -53,6 +53,34 @@ namespace ApolloCipher
             Debug.WriteLine($"Prog1 Decrypted ciphertext, returning Plaintext:\n{Plaintext}");
 
             Assert.IsTrue(Plaintext.Equals(LitanyAgainstFear));
+        }
+
+        [TestMethod]
+        public void TestEncryptDecrypt2()
+        {
+            string TestData = "return(Ő*ŝ)+(ő*Ŏ)+(Œ*ʫ);}public void š(){Ŏ=ŏ=0;}}";
+
+            Console.WriteLine("TestEncryptDecrypt starting with the following data:\n" + TestData);
+            PicProg = new ApolloProgram(TestData, false, Password);
+
+            // First, check that it's not null.
+            Assert.IsNotNull(PicProg);
+
+            Debug.WriteLine($"Instantiating cipher program successful.");
+
+            Debug.WriteLine($"Prog1 GetCurrentPlaintext at instantiation is:\n");
+            Debug.WriteLine(PicProg.GetCurrentPlaintext());
+
+            Debug.WriteLine($"Prog1 GetCurrentCiphertext at instantiation is:\n");
+            Debug.WriteLine(PicProg.GetCurrentCiphertext());
+
+            Ciphertext = PicProg.EncryptLoadedData();
+            Debug.WriteLine($"Prog1 Encrypted plaintext, returning Ciphertext:\n{Ciphertext}");
+
+            Plaintext = PicProg.DecryptLoadedData();
+            Debug.WriteLine($"Prog1 Decrypted ciphertext, returning Plaintext:\n{Plaintext}");
+
+            Assert.IsTrue(Plaintext.Equals(TestData));
         }
 
         [TestMethod]
